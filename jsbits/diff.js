@@ -8,7 +8,9 @@ function diff (currentObj, newObj, parent) {
       if (newObj.type === "vnode") replaceTextWithElement (currentObj, newObj, parent);
       else diffTextNodes (currentObj, newObj);
     } else {
-      if (newObj.type === "vnode") diffVNodes (currentObj, newObj, parent);
+      if (newObj.type == "maybe") {
+        if(newObj.node) diff(currentObj, newObj.node);
+      } else if (newObj.type === "vnode") diffVNodes (currentObj, newObj, parent);
       else replaceElementWithText (currentObj, newObj, parent);
     }
   }

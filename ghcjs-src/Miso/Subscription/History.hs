@@ -41,8 +41,12 @@ getCurrentURI = getURI
 getURI :: IO URI
 {-# INLINE getURI #-}
 getURI = do
+  auth <- URIAuth <$> (unpack <$> getUserName)
+                  <*> (unpack <$> getHostName)
+                  <*> ((':' :) . unpack <$> getPort)
+
   URI <$> do unpack <$> getProtocol
-      <*> pure Nothing
+      <*> pure (Just auth)
       <*> do Prelude.drop 1 . unpack <$> getPathName
       <*> do unpack <$> getSearch
       <*> do unpack <$> getHash
@@ -103,6 +107,17 @@ foreign import javascript unsafe "window.history.forward();"
 
 foreign import javascript unsafe "$r = window.location.pathname;"
   getPathName :: IO JSString
+
+
+foreign import javascript unsafe "$r = window.location.hostname;"
+  getHostName :: IO JSString
+
+foreign import javascript unsafe "$r = window.location.user ? window.location.user : '';"
+  getUserName :: IO JSString
+
+foreign import javascript unsafe "$r = window.location.port;"
+  getPort :: IO JSString
+
 
 foreign import javascript unsafe "$r = window.location.search;"
   getSearch :: IO JSString

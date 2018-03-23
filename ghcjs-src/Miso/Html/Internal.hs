@@ -144,6 +144,24 @@ node ns tag key attrs kids = View $ \sink -> do
           fmap (jsval . getTree) <$>
             traverse (flip runView sink) kids
 
+
+-- | Create a new @VNode@.
+--
+-- @node ns tag key attrs children@ creates a new node with tag @tag@
+-- and 'Key' @key@ in the namespace @ns@. All @attrs@ are called when
+-- the node is created and its children are initialized to @children@.
+maybe :: Maybe Key -> Maybe (View m) -> View m
+maybe key mView = View $ \sink -> do
+  vnode <- create
+  set "type" ("maybe" :: JSString) vnode
+  mTree <- traverse (runView' sink) mView
+  set "node" mTree vnode
+  set "key" key vnode
+  pure $ VTree vnode
+    where
+      runView' sink v = jsval . getTree <$> runView v sink
+
+
 instance ToJSVal Options
 instance ToJSVal Key where toJSVal (Key x) = toJSVal x
 
@@ -226,12 +244,6 @@ on :: MisoString
    -> (r -> action)
    -> Attribute action
 on = onWithOptions defaultOptions
-
-foreign import javascript unsafe "$r = objectToJSON($1,$2);"
-  objectToJSON
-    :: JSVal -- ^ decodeAt :: [JSString]
-    -> JSVal -- ^ object with impure references to the DOM
-    -> IO JSVal
 
 -- | @onWithOptions opts eventName decoder toAction@ is an attribute
 -- that will set the event handler of the associated DOM node to a function that
